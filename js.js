@@ -1000,7 +1000,8 @@
 
                 const spent = orders.reduce((sum, o) => {
                     if (o.paymentStatus === 'Paid') {
-                        const num = parseFloat((o.budget || '').replace(/[^0-9.]/g, ''));
+                        const priceMatch = (o.budget || '').match(/Rs\.?\s?[\d,]+/i);
+                        const num = priceMatch ? parseFloat(priceMatch[0].replace(/Rs\.?/gi, '').replace(/,/g, '')) : 0;
                         return sum + (isNaN(num) ? 0 : num);
                     }
                     return sum;
@@ -1010,7 +1011,7 @@
                 document.getElementById('stat-progress').textContent = active;
                 document.getElementById('stat-done').textContent = done;
                 document.getElementById('stat-pending').textContent = pending;
-                document.getElementById('stat-spent').textContent = spent > 0 ? '$' + spent.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '$0';
+                document.getElementById('stat-spent').textContent = spent > 0 ? 'Rs. ' + spent.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : 'Rs. 0';
 
                 if (orders.length === 0) {
                     list.innerHTML = '<p style="color:#64748b;font-size:0.85rem;text-align:center;padding:2rem 0;">No orders yet. Click <strong style="color:#fff;">+ New Order</strong> to get started!</p>';
