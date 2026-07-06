@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruu Graphics | Order Chat</title>
+    <meta name="description"
+        content="Ruu Graphics by Sachintha Shyamika: Expert logo design, branding, and social media marketing assets.">
+    <meta name="author" content="Sachintha Shyamika">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a0a'/><path d='M30 30h25c10 0 15 5 15 12s-5 12-15 12H30v16M55 54l15 16' stroke='%233b82f6' stroke-width='12' stroke-linecap='round' fill='none'/></svg>">
+
+    <!-- External UI Frameworks & SDKs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.payhere.lk/lib/payhere.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="selection:bg-blue-500/40 selection:text-white" data-page="order-chat">
+
+    <!-- Custom Confirmation Modal (bypasses browser confirm() blocks smoothly) -->
+    <div id="custom-confirm-modal"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:1rem;">
+        <div
+            style="background:#141414;border:1px solid rgba(255,255,255,0.08);border-radius:1.5rem;padding:2rem;width:100%;max-width:400px;text-align:center;box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div id="confirm-icon"
+                style="width:48px;height:48px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:#3b82f6;font-size:1.2rem;">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3 id="confirm-title" class="heading-bold" style="font-size:1.25rem;margin-bottom:0.5rem;color:#fff;">
+                Confirm Action</h3>
+            <p id="confirm-message" style="color:#94a3b8;font-size:0.88rem;line-height:1.5;margin-bottom:1.5rem;"></p>
+            <div style="display:flex;gap:0.75rem;">
+                <button id="confirm-btn-yes" class="btn-primary"
+                    style="flex:1;padding:0.75rem 1rem;font-size:0.88rem;">Yes</button>
+                <button id="confirm-btn-no" class="action-btn ghost"
+                    style="flex:1;padding:0.75rem 1rem;font-size:0.88rem;margin:0;">No</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="page-orders" class="page active">
+        <nav class="glass-nav border-b border-white/5 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+            <div class="text-xl heading-bold uppercase tracking-tighter">Ruu<span class="text-blue-500">Graphics</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <button class="nav-link" id="ordersNavBack" onclick="ordersNavBack()"><i class="fas fa-arrow-left"></i>
+                    <span id="ordersNavLabel">My Orders</span></button>
+                <div class="user-avatar-nav" title="Logged in">JS</div>
+                <button onclick="handleLogout()"
+                    style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);border-radius:0.6rem;padding:0.4rem 0.85rem;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;font-family:'Inter',sans-serif;">
+                    <i class="fas fa-sign-out-alt" style="margin-right:4px;"></i>Logout
+                </button>
+            </div>
+        </nav>
+        <!-- Chat View -->
+        <div id="ov-chat" class="view active-view" style="height:calc(100vh - 65px);">
+            <!-- Sidebar -->
+            <div class="chat-sidebar">
+                <div style="padding:1.25rem 1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:0.85rem;">Order Details</h3>
+                    <div
+                        style="background:#141414;border:1px solid rgba(255,255,255,0.07);border-radius:1rem;padding:1rem;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.6rem;"><span
+                                style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;">Order</span><span
+                                id="od-id" style="font-size:0.82rem;font-weight:600;color:#3b82f6;">#ORD-001</span>
+                        </div>
+                        <div style="height:1px;background:rgba(255,255,255,0.05);margin:0.6rem 0;"></div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.6rem;"><span
+                                style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;">Service</span><span
+                                id="od-service" style="font-size:0.82rem;font-weight:600;">—</span></div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.6rem;"><span
+                                style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;">Status</span><span
+                                id="od-status" style="font-size:0.82rem;font-weight:600;">—</span></div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.6rem;"><span
+                                style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;">Budget</span><span
+                                id="od-price" style="font-size:0.82rem;font-weight:600;">—</span></div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.6rem;"><span
+                                style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;">Delivery</span><span
+                                id="od-deadline" style="font-size:0.82rem;font-weight:600;">—</span></div>
+                        <div id="od-countdown-wrap"
+                            style="display:none;background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.18);border-radius:0.65rem;padding:0.55rem 0.75rem;margin-bottom:0.6rem;text-align:center;">
+                            <div
+                                style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#64748b;margin-bottom:0.3rem;">
+                                Time Remaining</div>
+                            <div id="od-countdown"
+                                style="font-size:1rem;font-weight:800;color:#3b82f6;letter-spacing:0.04em;font-variant-numeric:tabular-nums;">
+                                —</div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.6rem;"><span
+                                style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;">Payment</span><span
+                                id="chat-payment-status"
+                                style="font-size:0.82rem;font-weight:600;color:#f59e0b;">Unpaid</span></div>
+                        <div id="chat-payment-proof" style="font-size:0.75rem;color:#64748b;margin-top:0.4rem;">Receipt:
+                            none uploaded</div>
+
+                        <!-- Delivery Files -->
+                        <div id="delivery-files-section"
+                            style="display:none;margin-top:0.75rem;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.2);border-radius:0.75rem;padding:0.75rem 1rem;">
+                            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
+                                <i class="fas fa-cloud-download-alt" style="color:#22c55e;font-size:0.85rem;"></i>
+                                <span style="font-size:0.78rem;font-weight:700;color:#22c55e;">Files Ready to
+                                    Download</span>
+                            </div>
+                            <div id="delivery-files-list"
+                                style="display:flex;flex-direction:column;gap:0.35rem;margin-bottom:0.6rem;"></div>
+                            <button id="download-all-btn" onclick="downloadAllDeliveryFiles()"
+                                style="width:100%;background:#22c55e;color:#000;border:none;border-radius:0.55rem;padding:0.5rem 0.75rem;font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.2s;"
+                                onmouseover="this.style.background='#16a34a'"
+                                onmouseout="this.style.background='#22c55e'">
+                                <i class="fas fa-download"></i> Download All Files
+                            </button>
+                        </div>
+
+                        <!-- Paid badge -->
+                        <div id="payment-paid-badge"
+                            style="display:none;margin-top:1rem;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:0.75rem;padding:0.75rem 1rem;align-items:center;gap:0.65rem;">
+                            <div
+                                style="width:32px;height:32px;border-radius:50%;background:rgba(34,197,94,0.15);border:1.5px solid rgba(34,197,94,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="fas fa-check" style="color:#22c55e;font-size:0.75rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-size:0.8rem;font-weight:700;color:#22c55e;">Payment Confirmed &amp;
+                                    Order Active</div>
+                                <div style="font-size:0.7rem;color:#64748b;margin-top:0.1rem;">Your payment is verified
+                                    — design work is underway</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    style="padding:1rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;gap:0.5rem;">
+                    <button id="review-order-btn" class="action-btn ghost" onclick="openReviewModal()"
+                        style="display:none;border-color:rgba(250,204,21,0.3);color:#fbbf24;"><i
+                            class="fas fa-star"></i> Leave a Review</button>
+                    <button id="complete-order-btn" onclick="completeOrder()" style="display:none;"
+                        class="action-btn ghost"><i class="fas fa-check-circle" style="color:#60a5fa;"></i> Mark as
+                        Complete</button>
+                    <button id="cancel-order-btn" class="action-btn danger" onclick="cancelOrder()"
+                        style="display:none;"><i class="fas fa-times-circle"></i> Cancel Order</button>
+                    <div id="cancel-pending-notice"
+                        style="display:none;align-items:center;gap:0.6rem;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:0.65rem;padding:0.65rem 0.85rem;font-size:0.78rem;color:#f87171;">
+                        <i class="fas fa-hourglass-half" style="flex-shrink:0;"></i>
+                        <span>Cancellation request sent — awaiting designer approval.</span>
+                    </div>
+                </div>
+                <div style="padding:1.25rem;flex:1;overflow-y:auto;">
+                    <div
+                        style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:#64748b;margin-bottom:1rem;">
+                        Timeline</div>
+                    <div id="timeline-steps-container">
+                        <!-- Loaded Dynamically inside module -->
+                    </div>
+                </div>
+            </div>
+            <!-- Chat Main -->
+            <div class="chat-main">
+                <div
+                    style="padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:0.85rem;">
+                        <button class="nav-link" onclick="switchOrderView('ov-dashboard')"><i
+                                class="fas fa-arrow-left"></i></button>
+                        <div
+                            style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">
+                            SS</div>
+                        <div>
+                            <div style="font-weight:700;font-size:0.93rem;">Sachintha Shyamika</div>
+                            <div style="font-size:0.72rem;color:#22c55e;display:flex;align-items:center;gap:0.35rem;">
+                                <span
+                                    style="width:6px;height:6px;background:#22c55e;border-radius:50%;display:inline-block;"></span>Online
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="messages" id="chat-messages">
+                    <div class="sys-msg">Order placed · Today</div>
+                </div>
+                <div style="padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,0.05);">
+                    <div class="chat-input-wrap">
+                        <label class="icon-btn-sm attach-btn" style="cursor:pointer; margin:0; display:flex;">
+                            <i class="fas fa-image"></i>
+                            <input type="file" accept="image/*" style="display:none;"
+                                onchange="sendChatImage(event, 'order')">
+                        </label>
+                        <textarea id="chatInput" placeholder="Type a message..." rows="1"
+                            onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+                        <button class="icon-btn-sm send-btn" onclick="sendMessage()"><i
+                                class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Review Modal -->
+        <div id="review-modal"
+            style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:1rem;">
+            <div
+                style="background:#141414;border:1px solid rgba(250,204,21,0.2);border-radius:1.75rem;padding:2.25rem 2rem;width:100%;max-width:420px;animation:pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;">
+                <div style="text-align:center;margin-bottom:1.5rem;">
+                    <div
+                        style="width:56px;height:56px;background:rgba(250,204,21,0.1);border:2px solid rgba(250,204,21,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fbbf24;margin:0 auto 1rem;">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3 class="heading-bold" style="font-size:1.4rem;margin-bottom:0.3rem;">Rate Your Experience</h3>
+                    <p style="color:#64748b;font-size:0.83rem;">How was the quality of your order?</p>
+                </div>
+                <div id="review-stars" style="display:flex;justify-content:center;gap:0.5rem;margin-bottom:1.5rem;">
+                    <i class="fas fa-star review-star" data-val="1"
+                        style="font-size:2rem;color:#334155;cursor:pointer;transition:color 0.15s;"
+                        onmouseover="hoverStars(1)" onmouseout="resetStars()" onclick="setStars(1)"></i>
+                    <i class="fas fa-star review-star" data-val="2"
+                        style="font-size:2rem;color:#334155;cursor:pointer;transition:color 0.15s;"
+                        onmouseover="hoverStars(2)" onmouseout="resetStars()" onclick="setStars(2)"></i>
+                    <i class="fas fa-star review-star" data-val="3"
+                        style="font-size:2rem;color:#334155;cursor:pointer;transition:color 0.15s;"
+                        onmouseover="hoverStars(3)" onmouseout="resetStars()" onclick="setStars(3)"></i>
+                    <i class="fas fa-star review-star" data-val="4"
+                        style="font-size:2rem;color:#334155;cursor:pointer;transition:color 0.15s;"
+                        onmouseover="hoverStars(4)" onmouseout="resetStars()" onclick="setStars(4)"></i>
+                    <i class="fas fa-star review-star" data-val="5"
+                        style="font-size:2rem;color:#334155;cursor:pointer;transition:color 0.15s;"
+                        onmouseover="hoverStars(5)" onmouseout="resetStars()" onclick="setStars(5)"></i>
+                </div>
+                <div id="review-star-label"
+                    style="text-align:center;font-size:0.8rem;font-weight:700;color:#64748b;margin-bottom:1.25rem;min-height:1.2em;">
+                </div>
+                <div style="margin-bottom:1.25rem;">
+                    <label class="field-label">Your Review</label>
+                    <textarea id="review-text" class="form-input"
+                        placeholder="Share your experience with Sachintha's work..."
+                        style="min-height:90px;"></textarea>
+                </div>
+                <div class="err-box" id="review-err"></div>
+                <div style="display:flex;gap:0.75rem;">
+                    <button class="btn-primary" style="flex:1;" onclick="submitReview()">Submit Review <i
+                            class="fas fa-paper-plane"></i></button>
+                    <button class="action-btn ghost" style="width:auto;padding:0 1.25rem;"
+                        onclick="closeReviewModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <!-- Review Submitted Success Overlay -->
+        <div class="overlay" id="reviewSuccessOverlay">
+            <div class="success-box">
+                <div class="success-icon" style="background:rgba(250,204,21,0.1);border:2px solid #fbbf24;"><i
+                        class="fas fa-star" style="color:#fbbf24;"></i></div>
+                <h3 class="heading-bold" style="font-size:1.4rem;margin-bottom:0.5rem;">Thank You!</h3>
+                <p style="color:#64748b;font-size:0.88rem;line-height:1.6;margin-bottom:1.5rem;">Your review has been
+                    submitted and means a lot to Sachintha!</p>
+                <button class="btn-primary"
+                    onclick="document.getElementById('reviewSuccessOverlay').classList.remove('show');">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruu Graphics | Register</title>
+    <meta name="description"
+        content="Ruu Graphics by Sachintha Shyamika: Expert logo design, branding, and social media marketing assets.">
+    <meta name="author" content="Sachintha Shyamika">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a0a'/><path d='M30 30h25c10 0 15 5 15 12s-5 12-15 12H30v16M55 54l15 16' stroke='%233b82f6' stroke-width='12' stroke-linecap='round' fill='none'/></svg>">
+
+    <!-- External UI Frameworks & SDKs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.payhere.lk/lib/payhere.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="selection:bg-blue-500/40 selection:text-white" data-page="register">
+
+    <!-- Custom Confirmation Modal (bypasses browser confirm() blocks smoothly) -->
+    <div id="custom-confirm-modal"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:1rem;">
+        <div
+            style="background:#141414;border:1px solid rgba(255,255,255,0.08);border-radius:1.5rem;padding:2rem;width:100%;max-width:400px;text-align:center;box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div id="confirm-icon"
+                style="width:48px;height:48px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:#3b82f6;font-size:1.2rem;">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3 id="confirm-title" class="heading-bold" style="font-size:1.25rem;margin-bottom:0.5rem;color:#fff;">
+                Confirm Action</h3>
+            <p id="confirm-message" style="color:#94a3b8;font-size:0.88rem;line-height:1.5;margin-bottom:1.5rem;"></p>
+            <div style="display:flex;gap:0.75rem;">
+                <button id="confirm-btn-yes" class="btn-primary"
+                    style="flex:1;padding:0.75rem 1rem;font-size:0.88rem;">Yes</button>
+                <button id="confirm-btn-no" class="action-btn ghost"
+                    style="flex:1;padding:0.75rem 1rem;font-size:0.88rem;margin:0;">No</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="page-register" class="page active">
+        <nav class="glass-nav border-b border-white/5 px-6 py-5 flex justify-between items-center sticky top-0 z-50">
+            <div class="text-xl heading-bold uppercase tracking-tighter">Ruu<span class="text-blue-500">Graphics</span>
+            </div>
+            <button class="nav-link" onclick="showPage('page-portfolio')"><i class="fas fa-arrow-left"></i> Back to
+                Portfolio</button>
+        </nav>
+        <div class="flex-1 flex items-center justify-center px-6 py-12">
+            <div style="width:100%;max-width:480px;">
+                <div class="card-box">
+                    <div class="mb-8"><small
+                            style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.25em;color:#3b82f6;display:block;margin-bottom:0.6rem;">Create
+                            Account</small>
+                        <h1 class="heading-bold" style="font-size:2rem;line-height:1;">Join Ruu<br><span
+                                style="color:#3b82f6">Graphics.</span></h1>
+                    </div>
+
+                    <!-- Avatar -->
+                    <div style="display:flex;align-items:center;gap:1.25rem;margin-bottom:1.75rem;">
+                        <div class="avatar-preview" id="avatarPreview"
+                            onclick="document.getElementById('photoInput').click()">
+                            <i class="fas fa-user" id="avatarIcon"></i>
+                            <img id="avatarImg" alt="">
+                        </div>
+                        <div>
+                            <p style="font-weight:600;font-size:0.88rem;margin-bottom:0.3rem;">Profile Photo</p>
+                            <span style="font-size:0.75rem;color:#64748b;">Optional · JPG, PNG</span><br>
+                            <label for="photoInput"
+                                style="display:inline-block;margin-top:0.5rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#3b82f6;cursor:pointer;"><i
+                                    class="fas fa-upload" style="margin-right:4px;"></i>Upload</label>
+                            <input type="file" id="photoInput" accept="image/*" onchange="previewPhoto(event)"
+                                style="display:none;">
+                        </div>
+                    </div>
+
+                    <div class="err-box" id="regErr"></div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;margin-bottom:1.1rem;">
+                        <div><label class="field-label">First Name *</label><input type="text" id="reg-fname"
+                                class="form-input" placeholder="John"></div>
+                        <div><label class="field-label">Last Name *</label><input type="text" id="reg-lname"
+                                class="form-input" placeholder="Doe"></div>
+                    </div>
+                    <div style="margin-bottom:1.1rem;"><label class="field-label">Username *</label><input type="text"
+                            id="reg-uname" class="form-input" placeholder="johndoe123"></div>
+                    <div style="margin-bottom:1.1rem;"><label class="field-label">Email *</label><input type="email"
+                            id="reg-email" class="form-input" placeholder="john@email.com"></div>
+                    <div style="margin-bottom:1.1rem;"><label class="field-label">Contact No *</label><input type="tel"
+                            id="reg-phone" class="form-input" placeholder="+94771234567"></div>
+                    <div style="margin-bottom:1.1rem;">
+                        <label class="field-label">Password *</label>
+                        <div style="position:relative;">
+                            <input type="password" id="reg-pass" class="form-input" placeholder="Min. 8 characters"
+                                style="padding-right:2.8rem;">
+                            <span
+                                style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:#475569;cursor:pointer;"
+                                onclick="togglePassField('reg-pass',this)"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:1.1rem;">
+                        <label class="field-label">Confirm Password *</label>
+                        <div style="position:relative;">
+                            <input type="password" id="reg-pass2" class="form-input" placeholder="Repeat password"
+                                style="padding-right:2.8rem;">
+                            <span
+                                style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:#475569;cursor:pointer;"
+                                onclick="togglePassField('reg-pass2',this)"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:1.5rem;"><label class="field-label">About You</label><textarea
+                            id="reg-bio" class="form-input"
+                            placeholder="A short description about yourself..."></textarea></div>
+
+                    <button class="btn-primary" style="width:100%;" onclick="handleRegister()">Create Account <i
+                            class="fas fa-arrow-right"></i></button>
+                    <p style="text-align:center;margin-top:1.25rem;font-size:0.83rem;color:#64748b;">Already have an
+                        account? <button onclick="showPage('page-login')"
+                            style="color:#3b82f6;background:none;border:none;cursor:pointer;font-weight:600;font-size:0.83rem;">Sign
+                            In</button></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Success Overlay -->
+        <div class="overlay" id="regOverlay">
+            <div class="success-box" id="regSuccess">
+                <div class="success-icon" style="background:rgba(34,197,94,0.1);border:2px solid #22c55e;"><i
+                        class="fas fa-check" style="color:#22c55e;"></i></div>
+                <h3 class="heading-bold" style="font-size:1.5rem;margin-bottom:0.5rem;">Account Created!</h3>
+                <p style="color:#64748b;font-size:0.88rem;line-height:1.6;margin-bottom:1.5rem;">Welcome to Ruu
+                    Graphics. You can now sign in to your account.</p>
+                <button class="btn-primary"
+                    onclick="document.getElementById('regOverlay').classList.remove('show'); showPage('page-login');">Go
+                    to Sign In <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- OTP Verification Modal -->
+        <div id="otpModal">
+            <div class="otp-box">
+                <div class="otp-icon"><i class="fas fa-envelope-open-text"></i></div>
+                <h3 class="heading-bold" style="font-size:1.45rem;margin-bottom:0.5rem;">Verify Your Email</h3>
+                <p style="color:#64748b;font-size:0.84rem;line-height:1.6;margin-bottom:0.25rem;">
+                    We've sent a 6-digit code to
+                </p>
+                <p id="otpEmailDisplay"
+                    style="color:#3b82f6;font-weight:700;font-size:0.88rem;margin-bottom:0.75rem;word-break:break-all;">
+                </p>
+
+                <div id="otpDemoNote"
+                    style="display:none;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:0.65rem;padding:0.6rem 0.9rem;margin-bottom:0.75rem;font-size:0.78rem;color:#f59e0b;">
+                    <i class="fas fa-info-circle" style="margin-right:4px;"></i>
+                    <strong>Demo mode</strong> — EmailJS not configured. Code auto-filled:
+                    <span id="otpDemoCode" style="font-weight:800;letter-spacing:0.1em;"></span>
+                </div>
+
+                <div class="err-box" id="otpErr" style="text-align:left;margin-bottom:0.5rem;"></div>
+
+                <div class="otp-inputs" onpaste="otpPaste(event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="otpKeyUp(this,0,event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="otpKeyUp(this,1,event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="otpKeyUp(this,2,event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="otpKeyUp(this,3,event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="otpKeyUp(this,4,event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="otpKeyUp(this,5,event)">
+                </div>
+
+                <p class="otp-timer">Code expires in <span id="otpTimerSec">300s</span></p>
+
+                <button id="otpVerifyBtn" class="btn-primary" style="width:100%;margin-bottom:1rem;"
+                    onclick="verifyOtp()">
+                    Verify &amp; Create Account <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <p style="font-size:0.82rem;color:#64748b;">
+                    Didn't receive it?
+                    <button id="otpResendBtn" class="otp-resend" onclick="resendOtp()" disabled>Resend Code</button>
+                </p>
+                <button onclick="closeOtpModal()"
+                    style="margin-top:1rem;font-size:0.75rem;color:#475569;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;">←
+                    Back to form</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js.js"></script>
+</body>
+
+</html>

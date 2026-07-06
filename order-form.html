@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruu Graphics | Place New Order</title>
+    <meta name="description"
+        content="Ruu Graphics by Sachintha Shyamika: Expert logo design, branding, and social media marketing assets.">
+    <meta name="author" content="Sachintha Shyamika">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a0a'/><path d='M30 30h25c10 0 15 5 15 12s-5 12-15 12H30v16M55 54l15 16' stroke='%233b82f6' stroke-width='12' stroke-linecap='round' fill='none'/></svg>">
+
+    <!-- External UI Frameworks & SDKs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.payhere.lk/lib/payhere.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="selection:bg-blue-500/40 selection:text-white" data-page="order-form">
+
+    <!-- Custom Confirmation Modal (bypasses browser confirm() blocks smoothly) -->
+    <div id="custom-confirm-modal"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:1rem;">
+        <div
+            style="background:#141414;border:1px solid rgba(255,255,255,0.08);border-radius:1.5rem;padding:2rem;width:100%;max-width:400px;text-align:center;box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div id="confirm-icon"
+                style="width:48px;height:48px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:#3b82f6;font-size:1.2rem;">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3 id="confirm-title" class="heading-bold" style="font-size:1.25rem;margin-bottom:0.5rem;color:#fff;">
+                Confirm Action</h3>
+            <p id="confirm-message" style="color:#94a3b8;font-size:0.88rem;line-height:1.5;margin-bottom:1.5rem;"></p>
+            <div style="display:flex;gap:0.75rem;">
+                <button id="confirm-btn-yes" class="btn-primary"
+                    style="flex:1;padding:0.75rem 1rem;font-size:0.88rem;">Yes</button>
+                <button id="confirm-btn-no" class="action-btn ghost"
+                    style="flex:1;padding:0.75rem 1rem;font-size:0.88rem;margin:0;">No</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="page-orders" class="page active">
+        <nav class="glass-nav border-b border-white/5 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+            <div class="text-xl heading-bold uppercase tracking-tighter">Ruu<span class="text-blue-500">Graphics</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <button class="nav-link" id="ordersNavBack" onclick="ordersNavBack()"><i class="fas fa-arrow-left"></i>
+                    <span id="ordersNavLabel">My Orders</span></button>
+                <div class="user-avatar-nav" title="Logged in">JS</div>
+                <button onclick="handleLogout()"
+                    style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);border-radius:0.6rem;padding:0.4rem 0.85rem;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;font-family:'Inter',sans-serif;">
+                    <i class="fas fa-sign-out-alt" style="margin-right:4px;"></i>Logout
+                </button>
+            </div>
+        </nav>
+        <!-- Order Form -->
+        <div id="ov-form" class="view active-view" style="padding:2.5rem 2rem;align-items:center;">
+            <div style="width:100%;max-width:560px;">
+                <button class="nav-link" style="margin-bottom:1.75rem;" onclick="switchOrderView('ov-dashboard')"><i
+                        class="fas fa-arrow-left"></i> Back to Orders</button>
+                <div class="card-box">
+                    <h2 class="heading-bold" style="font-size:1.6rem;margin-bottom:0.4rem;">Place New Order</h2>
+                    <p style="font-size:0.85rem;color:#64748b;margin-bottom:2rem;">Fill in your project details and
+                        Sachintha will begin right away.</p>
+                    <div class="err-box" id="orderErr"></div>
+
+                    <div style="margin-bottom:1.1rem;">
+                        <label class="field-label">Service *</label>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.6rem;margin-bottom:0.2rem;">
+                            <div class="srv-opt" onclick="selectSrv(this,'Logo Design')"><i
+                                    class="fas fa-pen-nib"></i>Logo Design</div>
+                            <div class="srv-opt" onclick="selectSrv(this,'Full Branding')"><i
+                                    class="fas fa-star"></i>Full Branding</div>
+                            <div class="srv-opt" onclick="selectSrv(this,'Social Media')"><i
+                                    class="fas fa-image"></i>Social Media</div>
+                            <div class="srv-opt" onclick="selectSrv(this,'Flyer / Poster')"><i
+                                    class="fas fa-file-alt"></i>Flyer / Poster</div>
+                            <div class="srv-opt" onclick="selectSrv(this,'Packaging')"><i
+                                    class="fas fa-box"></i>Packaging</div>
+                            <div class="srv-opt" onclick="selectSrv(this,'Other')"><i
+                                    class="fas fa-ellipsis-h"></i>Other</div>
+                        </div>
+                    </div>
+
+                    <!-- Package Selector -->
+                    <div id="pkg-section" style="display:none;margin-bottom:1.25rem;">
+                        <label class="field-label">Choose Package *</label>
+                        <div id="pkg-cards" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom:1.1rem;"><label class="field-label">Project / Brand Name *</label><input
+                            type="text" id="f-brand" class="form-input" placeholder="e.g. TechVault, BloomCo"></div>
+                    <input type="hidden" id="f-budget" value="">
+                    <input type="hidden" id="f-deadline" value="">
+                    <div style="margin-bottom:1.1rem;"><label class="field-label">Project Description *</label><textarea
+                            id="f-desc" class="form-input"
+                            placeholder="Describe your project, style preferences, colors, target audience..."></textarea>
+                    </div>
+                    <div style="margin-bottom:1.1rem;"><label class="field-label">Reference Links
+                            (optional)</label><input type="url" id="f-ref" class="form-input"
+                            placeholder="https://dribbble.com/example"></div>
+
+                    <!-- Payment Method -->
+                    <div style="margin-bottom:1.5rem;">
+                        <label class="field-label">Payment Method *</label>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                            <div id="pay-method-online" onclick="selectPayMethod('online')"
+                                style="cursor:pointer;border:2px solid rgba(255,255,255,0.1);border-radius:0.75rem;padding:1rem;text-align:center;transition:all 0.2s;background:rgba(255,255,255,0.02);">
+                                <i class="fas fa-credit-card"
+                                    style="font-size:1.3rem;color:#3b82f6;margin-bottom:0.4rem;display:block;"></i>
+                                <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0;">Pay Online</div>
+                                <div style="font-size:0.68rem;color:#64748b;margin-top:2px;">Card / Bank / eZ Cash</div>
+                            </div>
+                            <div id="pay-method-bank" onclick="selectPayMethod('bank')"
+                                style="cursor:pointer;border:2px solid rgba(255,255,255,0.1);border-radius:0.75rem;padding:1rem;text-align:center;transition:all 0.2s;background:rgba(255,255,255,0.02);">
+                                <i class="fas fa-university"
+                                    style="font-size:1.3rem;color:#8b5cf6;margin-bottom:0.4rem;display:block;"></i>
+                                <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0;">Bank Transfer</div>
+                                <div style="font-size:0.68rem;color:#64748b;margin-top:2px;">Upload slip after transfer
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bank Slip Upload -->
+                        <div id="slip-section" style="display:none;">
+                            <div id="slip-upload-area" onclick="document.getElementById('f-slip').click()"
+                                style="cursor:pointer;border:2px dashed rgba(255,255,255,0.1);border-radius:0.75rem;padding:1.1rem 1rem;display:flex;align-items:center;gap:0.85rem;transition:all 0.2s;background:rgba(255,255,255,0.02);"
+                                onmouseover="this.style.borderColor='rgba(59,130,246,0.4)';this.style.background='rgba(59,130,246,0.04)'"
+                                onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.02)'">
+                                <div
+                                    style="width:38px;height:38px;border-radius:0.6rem;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center;color:#3b82f6;flex-shrink:0;">
+                                    <i class="fas fa-file-upload"></i>
+                                </div>
+                                <div>
+                                    <div id="slip-label" style="font-size:0.85rem;font-weight:600;color:#94a3b8;">Click
+                                        to attach payment slip</div>
+                                    <div style="font-size:0.72rem;color:#475569;margin-top:2px;">JPG, PNG or PDF · Max
+                                        5MB</div>
+                                </div>
+                            </div>
+                            <input type="file" id="f-slip" accept="image/*,.pdf" style="display:none;"
+                                onchange="previewSlip(event)">
+                        </div>
+
+                        <!-- PayHere Info Alert -->
+                        <div id="payhere-info"
+                            style="display:none;background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);border-radius:0.75rem;padding:0.85rem 1rem;">
+                            <div style="font-size:0.8rem;color:#93c5fd;"><i class="fas fa-shield-alt"
+                                    style="margin-right:0.4rem;"></i>Secure payment via PayHere. Supports Visa,
+                                Mastercard, AMEX, eZ Cash, mCash &amp; internet banking.</div>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" style="width:100%;" onclick="submitOrder()">
+                        <span id="submit-btn-text">Submit Order</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruu Graphics | Sign In</title>
+    <meta name="description"
+        content="Ruu Graphics by Sachintha Shyamika: Expert logo design, branding, and social media marketing assets.">
+    <meta name="author" content="Sachintha Shyamika">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a0a'/><path d='M30 30h25c10 0 15 5 15 12s-5 12-15 12H30v16M55 54l15 16' stroke='%233b82f6' stroke-width='12' stroke-linecap='round' fill='none'/></svg>">
+
+    <!-- External UI Frameworks & SDKs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.payhere.lk/lib/payhere.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="selection:bg-blue-500/40 selection:text-white" data-page="login">
+
+    <!-- Custom Confirmation Modal (bypasses browser confirm() blocks smoothly) -->
+    <div id="custom-confirm-modal"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:1rem;">
+        <div
+            style="background:#141414;border:1px solid rgba(255,255,255,0.08);border-radius:1.5rem;padding:2rem;width:100%;max-width:400px;text-align:center;box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div id="confirm-icon"
+                style="width:48px;height:48px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:#3b82f6;font-size:1.2rem;">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3 id="confirm-title" class="heading-bold" style="font-size:1.25rem;margin-bottom:0.5rem;color:#fff;">
+                Confirm Action</h3>
+            <p id="confirm-message" style="color:#94a3b8;font-size:0.88rem;line-height:1.5;margin-bottom:1.5rem;"></p>
+            <div style="display:flex;gap:0.75rem;">
+                <button id="confirm-btn-yes" class="btn-primary"
+                    style="flex:1;padding:0.75rem 1rem;font-size:0.88rem;">Yes</button>
+                <button id="confirm-btn-no" class="action-btn ghost"
+                    style="flex:1;padding:0.75rem 1rem;font-size:0.88rem;margin:0;">No</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="page-login" class="page active">
+        <nav class="glass-nav border-b border-white/5 px-6 py-5 flex justify-between items-center sticky top-0 z-50">
+            <div class="text-xl heading-bold uppercase tracking-tighter">Ruu<span class="text-blue-500">Graphics</span>
+            </div>
+            <button class="nav-link" onclick="showPage('page-portfolio')"><i class="fas fa-arrow-left"></i> Back to
+                Portfolio</button>
+        </nav>
+        <div class="flex-1 flex items-center justify-center px-6 py-12">
+            <div style="width:100%;max-width:420px;">
+                <div class="card-box">
+                    <div class="mb-8"><small
+                            style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.25em;color:#3b82f6;display:block;margin-bottom:0.6rem;">Welcome
+                            Back</small>
+                        <h1 class="heading-bold" style="font-size:2rem;line-height:1;">Sign In to<br><span
+                                style="color:#3b82f6">Ruu Graphics.</span></h1>
+                    </div>
+
+                    <div class="err-box" id="loginErr"></div>
+
+                    <div style="margin-bottom:1.1rem;"><label class="field-label">Email or Username *</label><input
+                            type="text" id="login-id" class="form-input" placeholder="john@email.com or johndoe123">
+                    </div>
+                    <div style="margin-bottom:0.5rem;">
+                        <label class="field-label">Password *</label>
+                        <div style="position:relative;">
+                            <input type="password" id="login-pass" class="form-input" placeholder="Your password"
+                                style="padding-right:2.8rem;">
+                            <span
+                                style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:#475569;cursor:pointer;"
+                                onclick="togglePassField('login-pass',this)"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                    <div style="text-align:right;margin-bottom:1.5rem;"><button onclick="openForgotPassword()"
+                            style="font-size:0.78rem;color:#3b82f6;background:none;border:none;cursor:pointer;font-weight:600;">Forgot
+                            password?</button></div>
+
+                    <button class="btn-primary" style="width:100%;" onclick="handleLogin()">Sign In <i
+                            class="fas fa-arrow-right"></i></button>
+
+                    <p style="text-align:center;margin-top:1.25rem;font-size:0.83rem;color:#64748b;">Don't have an
+                        account? <button onclick="showPage('page-register')"
+                            style="color:#3b82f6;background:none;border:none;cursor:pointer;font-weight:600;font-size:0.83rem;">Sign
+                            Up</button></p>
+                </div>
+            </div>
+        </div>
+        <!-- Success Overlay -->
+        <div class="overlay" id="loginOverlay">
+            <div class="success-box">
+                <div class="success-icon"><i class="fas fa-check"></i></div>
+                <h3 class="heading-bold" style="font-size:1.5rem;margin-bottom:0.5rem;">Welcome Back!</h3>
+                <p style="color:#64748b;font-size:0.88rem;line-height:1.6;margin-bottom:1.5rem;">You have successfully
+                    signed in.</p>
+                <button class="btn-primary" onclick="closeOverlay('loginOverlay');showPage('page-orders');">Go to My
+                    Orders</button>
+            </div>
+        </div>
+
+        <!-- ── FORGOT PASSWORD MODAL ── -->
+        <div id="fpModal"
+            style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:1rem;">
+            <!-- Step 1: Enter email -->
+            <div id="fp-step1" class="otp-box" style="max-width:420px;">
+                <div class="otp-icon"><i class="fas fa-key"></i></div>
+                <h3 class="heading-bold" style="font-size:1.45rem;margin-bottom:0.5rem;">Reset Password</h3>
+                <p style="color:#64748b;font-size:0.84rem;line-height:1.6;margin-bottom:1.25rem;">Enter your registered
+                    email address and we'll send you a verification code.</p>
+                <div class="err-box" id="fpEmailErr" style="text-align:left;"></div>
+                <input type="email" id="fp-email-input" class="form-input" placeholder="your@email.com"
+                    style="margin-bottom:1rem;">
+                <button id="fpSendBtn" class="btn-primary" style="width:100%;margin-bottom:0.75rem;"
+                    onclick="fpSendOtp()">
+                    Send Code <i class="fas fa-paper-plane"></i>
+                </button>
+                <button onclick="closeFpModal()"
+                    style="font-size:0.75rem;color:#475569;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;">←
+                    Back to Sign In</button>
+            </div>
+
+            <!-- Step 2: Verify OTP -->
+            <div id="fp-step2" class="otp-box" style="max-width:420px;display:none;">
+                <div class="otp-icon"><i class="fas fa-envelope-open-text"></i></div>
+                <h3 class="heading-bold" style="font-size:1.45rem;margin-bottom:0.5rem;">Enter Code</h3>
+                <p style="color:#64748b;font-size:0.84rem;line-height:1.6;margin-bottom:0.25rem;">We sent a 6-digit code
+                    to</p>
+                <p id="fpEmailDisplay"
+                    style="color:#3b82f6;font-weight:700;font-size:0.88rem;margin-bottom:0.75rem;word-break:break-all;">
+                </p>
+                <div id="fpDemoNote"
+                    style="display:none;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:0.65rem;padding:0.6rem 0.9rem;margin-bottom:0.75rem;font-size:0.78rem;color:#f59e0b;">
+                    <i class="fas fa-info-circle" style="margin-right:4px;"></i>
+                    <strong>Demo mode</strong> — EmailJS not configured. Code auto-filled: <span id="fpDemoCode"
+                        style="font-weight:800;letter-spacing:0.1em;"></span>
+                </div>
+                <div class="err-box" id="fpOtpErr" style="text-align:left;margin-bottom:0.5rem;"></div>
+                <div class="otp-inputs" onpaste="fpOtpPaste(event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="fpOtpKeyUp(this,0,event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="fpOtpKeyUp(this,1,event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="fpOtpKeyUp(this,2,event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="fpOtpKeyUp(this,3,event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="fpOtpKeyUp(this,4,event)">
+                    <input type="text" inputmode="numeric" maxlength="1" onkeyup="fpOtpKeyUp(this,5,event)">
+                </div>
+                <p class="otp-timer" id="fpTimerRow">Code expires in <span id="fpTimerSec">300s</span></p>
+                <button id="fpVerifyBtn" class="btn-primary" style="width:100%;margin-bottom:1rem;"
+                    onclick="fpVerifyOtp()">
+                    Verify Code <i class="fas fa-arrow-right"></i>
+                </button>
+                <p style="font-size:0.82rem;color:#64748b;">
+                    Didn't receive it? <button id="fpResendBtn" class="otp-resend" onclick="fpResendOtp()"
+                        disabled>Resend Code</button>
+                </p>
+                <button onclick="closeFpModal()"
+                    style="margin-top:1rem;font-size:0.75rem;color:#475569;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;">←
+                    Back to Sign In</button>
+            </div>
+
+            <!-- Step 3: New password -->
+            <div id="fp-step3" class="otp-box" style="max-width:420px;display:none;">
+                <div class="otp-icon" style="background:rgba(34,197,94,0.1);border-color:#22c55e;"><i
+                        class="fas fa-lock" style="color:#22c55e;"></i></div>
+                <h3 class="heading-bold" style="font-size:1.45rem;margin-bottom:0.5rem;">Set New Password</h3>
+                <p style="color:#64748b;font-size:0.84rem;line-height:1.6;margin-bottom:1.25rem;">Choose a strong
+                    password for your account.</p>
+                <div class="err-box" id="fpNewPassErr" style="text-align:left;margin-bottom:0.75rem;"></div>
+                <div style="margin-bottom:1rem;">
+                    <label class="field-label">New Password</label>
+                    <div style="position:relative;">
+                        <input type="password" id="fp-new-pass" class="form-input" placeholder="Min. 8 characters"
+                            style="padding-right:2.8rem;">
+                        <span
+                            style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:#475569;cursor:pointer;"
+                            onclick="togglePassField('fp-new-pass',this)"><i class="fas fa-eye"></i></span>
+                    </div>
+                </div>
+                <div style="margin-bottom:1.25rem;">
+                    <label class="field-label">Confirm New Password</label>
+                    <div style="position:relative;">
+                        <input type="password" id="fp-confirm-pass" class="form-input" placeholder="Repeat password"
+                            style="padding-right:2.8rem;">
+                        <span
+                            style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:#475569;cursor:pointer;"
+                            onclick="togglePassField('fp-confirm-pass',this)"><i class="fas fa-eye"></i></span>
+                    </div>
+                </div>
+                <button id="fpResetBtn" class="btn-primary" style="width:100%;margin-bottom:0.75rem;"
+                    onclick="fpResetPassword()">
+                    Reset Password <i class="fas fa-check"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js.js"></script>
+</body>
+
+</html>
