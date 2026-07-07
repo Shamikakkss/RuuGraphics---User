@@ -1,4 +1,4 @@
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import {
             getAuth, createUserWithEmailAndPassword,
             signInWithEmailAndPassword, signOut,
@@ -44,11 +44,85 @@
             'sb_publishable_6_vIlumY_wH2wCmJ8RnY4w_34aWydZz'
         );
 
+        const previewQuery = new URLSearchParams(window.location.search).get('preview');
+        const isAdminPreview = previewQuery === 'admin' || localStorage.getItem('ruu-preview-mode') === 'admin';
+        if (isAdminPreview) {
+            try {
+                sessionStorage.setItem('ruu-preview-mode', 'admin');
+                sessionStorage.setItem('ruu-preview-source', 'admin');
+            } catch (e) { }
+            try {
+                localStorage.removeItem('ruu-preview-mode');
+                localStorage.removeItem('ruu-preview-source');
+            } catch (e) { }
+        }
+
         // Active chat and real-time database listener cleanups
         let _chatUnsub = null;
         let _orderDocUnsub = null;
         let _supportChatUnsub = null;
         let _ordersUnsub = null;
+
+        function _isAdminPreviewMode() {
+            try {
+                return sessionStorage.getItem('ruu-preview-mode') === 'admin';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function _getAdminPreviewUser() {
+            return {
+                uid: 'admin-preview',
+                email: 'preview@ruugraphics.com',
+                username: 'Admin Preview',
+                fname: 'Admin',
+                lname: 'Preview'
+            };
+        }
+
+        function _applyAdminPreviewRestrictions() {
+            if (!_isAdminPreviewMode()) return;
+
+            document.querySelectorAll('a.whatsapp-float, a[href*="wa.me"]').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            document.querySelectorAll('[onclick]').forEach(el => {
+                const handler = el.getAttribute('onclick') || '';
+                const shouldBlock =
+                    handler.includes("showPage('page-login')") ||
+                    handler.includes("showPage('page-orders')") ||
+                    handler.includes("switchOrderView('ov-form')") ||
+                    handler.includes('submitReview()');
+
+                if (!shouldBlock) return;
+
+                el.onclick = function (event) {
+                    event?.preventDefault?.();
+                    event?.stopPropagation?.();
+                    return false;
+                };
+                el.style.opacity = '0.45';
+                el.style.cursor = 'not-allowed';
+                el.title = 'Preview mode';
+                if (el.tagName === 'A') el.setAttribute('href', '#');
+            });
+
+            document.querySelectorAll('button[onclick="handleLogout()"], button[onclick="handleLogout();"]').forEach(btn => {
+                btn.innerHTML = '<i class="fas fa-arrow-left" style="margin-right:4px;"></i>Back to Admin';
+                btn.title = 'Return to Admin Dashboard';
+            });
+
+            const loggedOut = document.getElementById('nav-logged-out');
+            if (loggedOut) loggedOut.style.display = 'none';
+
+            document.querySelectorAll('#nav-logged-in button').forEach(btn => {
+                if (/my orders/i.test(btn.textContent || '')) {
+                    btn.style.display = 'none';
+                }
+            });
+        }
 
         // ════════════════════════════════════════
         // DYNAMIC SITE CONTENT & ON-SNAPSHOTS
@@ -371,6 +445,8 @@
             const loggedOut = document.getElementById('nav-logged-out');
             if (loggedIn) loggedIn.style.display = 'flex';
             if (loggedOut) loggedOut.style.display = 'none';
+
+            _applyAdminPreviewRestrictions();
         }
 
         const PROTECTED_PAGES = ['order-dashboard', 'order-form', 'order-chat', 'support-chat'];
@@ -397,6 +473,12 @@
                 await _loadUserProfile(user);
                 _initCurrentPage();
             } else {
+                if (_isAdminPreviewMode()) {
+                    window._currentUser = _getAdminPreviewUser();
+                    _applyUserNav(window._currentUser, window._currentUser);
+                    _initCurrentPage();
+                    return;
+                }
                 window._currentUser = null;
                 const loggedIn = document.getElementById('nav-logged-in');
                 const loggedOut = document.getElementById('nav-logged-out');
@@ -794,6 +876,7 @@
             if (!brand) return _orderErr('Please enter your project / brand name.');
             if (!desc) return _orderErr('Please describe your project.');
             if (!window._selectedPayMethod) return _orderErr('Please select a payment method.');
+            if (window._selectedPayMethod === 'bank' && !window._bankSlipBase64) return _orderErr('Please attach your payment slip before submitting.');
             document.getElementById('orderErr').style.display = 'none';
 
             const btn = document.querySelector('#ov-form .btn-primary');
@@ -824,13 +907,17 @@
                     const phone = userData.phone || '0000000000';
 
                     // Generate PayHere hash SERVER-SIDE via Supabase Edge Function.
-                    // The merchant_secret never touches the browser now.
+                    // The merchant_secret never touches the browser now, AND the
+                    // server looks up the real price itself instead of trusting
+                    // whatever amount the browser sends — this stops someone from
+                    // editing the amount in DevTools before checkout.
                     const hashRes = await fetch(PAYHERE_HASH_ENDPOINT, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             order_id: orderCode,
-                            amount: formattedAmount,
+                            service: service,
+                            package: window._selectedPackage ? window._selectedPackage.name : '',
                             currency: 'LKR'
                         })
                     });
@@ -839,6 +926,8 @@
                     }
                     const hashData = await hashRes.json();
                     const hash = hashData.hash;
+                    // Use the server-verified amount, not the one computed locally.
+                    const formattedAmount = hashData.amount;
 
 
                     const payment = {
@@ -1000,8 +1089,7 @@
 
                 const spent = orders.reduce((sum, o) => {
                     if (o.paymentStatus === 'Paid') {
-                        const priceMatch = (o.budget || '').match(/Rs\.?\s?[\d,]+/i);
-                        const num = priceMatch ? parseFloat(priceMatch[0].replace(/Rs\.?/gi, '').replace(/,/g, '')) : 0;
+                        const num = parseFloat((o.budget || '').replace(/[^0-9.]/g, ''));
                         return sum + (isNaN(num) ? 0 : num);
                     }
                     return sum;
@@ -1011,7 +1099,7 @@
                 document.getElementById('stat-progress').textContent = active;
                 document.getElementById('stat-done').textContent = done;
                 document.getElementById('stat-pending').textContent = pending;
-                document.getElementById('stat-spent').textContent = spent > 0 ? 'Rs. ' + spent.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : 'Rs. 0';
+                document.getElementById('stat-spent').textContent = spent > 0 ? '$' + spent.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '$0';
 
                 if (orders.length === 0) {
                     list.innerHTML = '<p style="color:#64748b;font-size:0.85rem;text-align:center;padding:2rem 0;">No orders yet. Click <strong style="color:#fff;">+ New Order</strong> to get started!</p>';
@@ -1472,12 +1560,29 @@
             if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
             if (_ordersUnsub) { _ordersUnsub(); _ordersUnsub = null; }
             if (_supportUnsub) { _supportUnsub(); _supportUnsub = null; }
-            await signOut(auth);
+            const wasPreviewMode = _isAdminPreviewMode();
+            try {
+                sessionStorage.removeItem('ruu-preview-mode');
+                sessionStorage.removeItem('ruu-preview-source');
+                localStorage.removeItem('ruu-preview-mode');
+                localStorage.removeItem('ruu-preview-source');
+            } catch (e) { }
+            try {
+                await signOut(auth);
+            } catch (e) { }
             window._currentUser = null;
-            window.showPage('page-portfolio');
+            if (wasPreviewMode) {
+                window.location.href = '../admin/dashboard.html';
+            } else {
+                window.showPage('page-portfolio');
+            }
         };
 
         window.submitReview = async function () {
+            if (_isAdminPreviewMode()) {
+                window.showToast('Preview mode: review submission is disabled.', 'info');
+                return;
+            }
             const rating = window._reviewRating;
             const text = document.getElementById('review-text').value.trim();
             const errEl = document.getElementById('review-err');
@@ -1541,6 +1646,10 @@
         };
 
         window.showPage = function (id) {
+            if (_isAdminPreviewMode() && ['page-login', 'page-orders', 'page-register'].includes(id)) {
+                window.showToast('Preview mode: this action is disabled.', 'info');
+                return;
+            }
             if (id === 'page-orders' && !window._currentUser) {
                 window.location.href = 'login.html?next=orders';
                 return;
@@ -1550,6 +1659,10 @@
         };
 
         window.switchOrderView = function (viewId) {
+            if (_isAdminPreviewMode() && viewId === 'ov-form') {
+                window.showToast('Preview mode: new orders are disabled.', 'info');
+                return;
+            }
             const file = ORDER_VIEW_FILE_MAP[viewId];
             if (file) window.location.href = file;
         };
