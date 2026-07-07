@@ -49,6 +49,24 @@ let _chatUnsub = null;
 let _orderDocUnsub = null;
 let _supportChatUnsub = null;
 let _ordersUnsub = null;
+let _dbPackages = null; // packages loaded from Firestore (siteConfig/packages), falls back to SERVICE_PACKAGES
+
+// Fetch admin-managed package prices/features from Firestore so the order form
+// always reflects whatever was saved in the admin Packages panel.
+async function loadPackagesFromDB() {
+  try {
+    const snap = await getDoc(doc(db, 'siteConfig', 'packages'));
+    if (snap.exists() && snap.data().data) {
+      _dbPackages = snap.data().data;
+      // If the user already picked a service before this finished loading, re-render with fresh data
+      if (window._selectedService && typeof renderPackages === 'function') {
+        renderPackages(window._selectedService);
+      }
+    }
+  } catch (e) {
+    console.warn('Could not load packages from database, using defaults:', e);
+  }
+}
 
 // ════════════════════════════════════════
 // DYNAMIC SITE CONTENT & ON-SNAPSHOTS
@@ -388,6 +406,8 @@ function _initCurrentPage() {
     }
   } else if (page === 'support-chat') {
     if (typeof loadSupportChat === 'function') loadSupportChat();
+  } else if (page === 'order-form') {
+    loadPackagesFromDB();
   }
 }
 
@@ -1727,8 +1747,18 @@ function selectSrv(el, name) {
   renderPackages(name);
 }
 
+// Admin panel doesn't store a "days" field per package, so derive one:
+// try to read it off the package itself, else parse "X-day delivery" out of
+// the features text, else fall back to a sensible default per tier.
+function _pkgDays(pkg, tierIndex) {
+  if (pkg.days) return pkg.days;
+  const m = (pkg.features || '').match(/(\d+)\s*-?\s*day/i);
+  if (m) return parseInt(m[1], 10);
+  return [5, 4, 3][tierIndex] || 5;
+}
+
 function renderPackages(service) {
-  const packages = SERVICE_PACKAGES[service];
+  const packages = (_dbPackages && _dbPackages[service]) || SERVICE_PACKAGES[service];
   const section = document.getElementById('pkg-section');
   const container = document.getElementById('pkg-cards');
   if (!packages) { section.style.display = 'none'; return; }
@@ -1741,8 +1771,9 @@ function renderPackages(service) {
 
   container.innerHTML = packages.map((pkg, i) => {
     const t = tiers[i];
-    return `<div class="pkg-card" data-pkg="${pkg.name}" data-price="${pkg.price}" data-days="${pkg.days}"
-                    onclick="selectPackage(this,'${pkg.name}','${pkg.price}',${pkg.days})"
+    const days = _pkgDays(pkg, i);
+    return `<div class="pkg-card" data-pkg="${pkg.name}" data-price="${pkg.price}" data-days="${days}"
+                    onclick="selectPackage(this,'${pkg.name}','${pkg.price}',${days})"
                     style="cursor:pointer;border:1.5px solid ${t.border};background:${t.bg};border-radius:0.85rem;padding:1rem 1.1rem;transition:all 0.2s;position:relative;">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
                         <div>
@@ -1751,7 +1782,7 @@ function renderPackages(service) {
                         </div>
                         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;">
                             <div class="pkg-check" style="width:22px;height:22px;border-radius:50%;border:2px solid ${t.border};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;"></div>
-                            <span style="font-size:0.65rem;font-weight:700;color:${t.badge};background:${t.badgeBg};padding:0.18rem 0.5rem;border-radius:999px;white-space:nowrap;"><i class="fas fa-clock" style="margin-right:3px;"></i>${pkg.days}d delivery</span>
+                            <span style="font-size:0.65rem;font-weight:700;color:${t.badge};background:${t.badgeBg};padding:0.18rem 0.5rem;border-radius:999px;white-space:nowrap;"><i class="fas fa-clock" style="margin-right:3px;"></i>${days}d delivery</span>
                         </div>
                     </div>
                     <div style="font-size:0.78rem;color:#94a3b8;line-height:1.6;">${pkg.features.split(' · ').filter(f => !f.match(/\d+-day delivery/i)).map(f => `<span style="display:inline-block;margin-right:0.35rem;">✓ ${f}</span>`).join('')}</div>
